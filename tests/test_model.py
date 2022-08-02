@@ -32,10 +32,7 @@ class TestEntries(unittest.TestCase):
             self.assertTrue(desc)
             self.assertEqual(desc.lang, 'en')
 
-        expected_iterations = 1
-        for _ in desc_entry:
-            expected_iterations -= 1
-
+        expected_iterations = 1 - sum(1 for _ in desc_entry)
         self.assertEqual(expected_iterations, 0)
 
     def test_reference_entry(self):
@@ -54,10 +51,7 @@ class TestEntries(unittest.TestCase):
             self.assertIsInstance(ref.name, str)
             self.assertIsInstance(ref.refsource, str)
 
-        expected_iterations = 6
-        for _ in ref_entry:
-            expected_iterations -= 1
-
+        expected_iterations = 6 - sum(1 for _ in ref_entry)
         self.assertEqual(expected_iterations, 0)
 
     def test_affects_entry(self):
@@ -76,10 +70,7 @@ class TestEntries(unittest.TestCase):
             self.assertIsInstance(product.vendor_name, str)
             self.assertIsInstance(product.versions, list)
 
-        expected_iterations = 5
-        for _ in affects_entry:
-            expected_iterations -= 1
-
+        expected_iterations = 5 - sum(1 for _ in affects_entry)
         self.assertEqual(expected_iterations, 0)
 
 
@@ -108,7 +99,7 @@ class TestConfigurations(unittest.TestCase):
 
         # ---
         # test empty data
-        config = model.Configurations.from_data(dict())
+        config = model.Configurations.from_data({})
 
         self.assertIsInstance(config, model.Configurations)
 
@@ -137,7 +128,7 @@ class TestImpact(unittest.TestCase):
 
         # ---
         # test empty data
-        impact = model.Impact.from_data(dict())
+        impact = model.Impact.from_data({})
 
         self.assertIsInstance(impact, model.Impact)
 

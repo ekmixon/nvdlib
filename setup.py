@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 
 BASE_DIR = os.path.dirname(__file__)
 
-ABOUT = dict()
+ABOUT = {}
 with open(Path(BASE_DIR) / 'nvdlib' / '__about__.py') as f:
     exec(f.read(), ABOUT)
 

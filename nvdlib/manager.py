@@ -488,7 +488,7 @@ class FeedManager(object):
         self._n_workers = n_workers
 
         self._feed_names: typing.Set[str] = {self.DEFAULT_FEED}
-        self._feeds: typing.Dict[str, JSONFeed] = dict()
+        self._feeds: typing.Dict[str, JSONFeed] = {}
 
         # create data_dir
         os.makedirs(self._data_dir, exist_ok=True)
@@ -644,7 +644,7 @@ class FeedManager(object):
 
         self.feeds_check(*feed_names, data_dir=data_dir)
 
-        _LOGGER.info(f"Fetching feeds...")
+        _LOGGER.info("Fetching feeds...")
 
         # remove local feeds
         local_feed_names = list(
@@ -685,7 +685,7 @@ class FeedManager(object):
 
             feed_data = feeds.values() if isinstance(feeds, dict) else feeds
 
-            _LOGGER.info(f"Collecting entries...")
+            _LOGGER.info("Collecting entries...")
 
             for feed in feed_data:
 
@@ -695,14 +695,14 @@ class FeedManager(object):
                 if isinstance(feed, JSONFeed):
                     self._loop.run_until_complete(feed.load())
 
-                elif isinstance(feed, str) or isinstance(feed, int):
+                elif isinstance(feed, (str, int)):
                     feed = self.parse_feed_name(feed)
 
                     feed_dict = self.load_feeds([feed])
 
                     feed_count = len(feed_dict)
                     assert feed_count == 1, \
-                        f"Unexpected length of `feed_dict`: {feed_count}"
+                            f"Unexpected length of `feed_dict`: {feed_count}"
 
                     feed, = feed_dict.values()
 
@@ -711,9 +711,7 @@ class FeedManager(object):
                         f"Expected type `{Union[str, int, JSONFeed]}`, got `{type(feed)}`"
                     )
 
-                for entry in feed.data['CVE_Items']:
-                    yield entry
-
+                yield from feed.data['CVE_Items']
                 feed.flush()
 
         data_iterator = iter_feeds()
@@ -778,11 +776,7 @@ class FeedManager(object):
         tasks = asyncio.gather(*futures)
 
         results = loop.run_until_complete(tasks)
-        for valid, feed in zip(results, feed_names):
-            if not valid:
-                return False
-
-        return True
+        return all(valid for valid, feed in zip(results, feed_names))
 
     @staticmethod
     def get_default_event_loop():
@@ -798,9 +792,7 @@ class FeedManager(object):
     @staticmethod
     def parse_feed_name(feed_name):
         """Parse feed names."""
-        match = re.fullmatch(FEED_NAME_PATTERN, str(feed_name), re.IGNORECASE)
-
-        if match:
-            return match.group('name')
+        if match := re.fullmatch(FEED_NAME_PATTERN, str(feed_name), re.IGNORECASE):
+            return match['name']
 
         return feed_name

@@ -24,7 +24,7 @@ def _warn_or_raise(msg):
         raise TypeError(msg)
 
 
-def selector(fn: callable) -> typing.Callable:  # noqa: D401
+def selector(fn: callable) -> typing.Callable:    # noqa: D401
     """Wrapper for specific selectors."""
     @wraps(fn)
     def _arg_wrapper(*args, **kwargs):
@@ -45,9 +45,7 @@ def selector(fn: callable) -> typing.Callable:  # noqa: D401
                     continue
 
                 if isinstance(value, list):
-                    ret = any([
-                        fn(value=v, *args, **kwargs) for v in value
-                    ])
+                    ret = any(fn(value=v, *args, **kwargs) for v in value)
 
                 else:
                     ret = fn(value=value, *args, **kwargs)
@@ -70,12 +68,11 @@ def match(pattern: typing.Union[str, int],
     value = kwargs.pop('value')
 
     # type adaptation only if val is int or float
-    if isinstance(value, int) or isinstance(value, float):
+    if isinstance(value, (int, float)):
         value = type(pattern)(value)
 
-    if config.TYPE_CHECK_LEVEL > 0:
-        if not isinstance(pattern, type(value)):
-            _warn_or_raise(f"Type mismatch: pattern of type `{type(pattern)}`, value of type `{type(value)}`")
+    if config.TYPE_CHECK_LEVEL > 0 and not isinstance(pattern, type(value)):
+        _warn_or_raise(f"Type mismatch: pattern of type `{type(pattern)}`, value of type `{type(value)}`")
 
     if isinstance(pattern, str):
         if full_match:
@@ -105,9 +102,7 @@ def search(pattern: typing.Union[str, int],
         if not isinstance(pattern, type(value)):
             _warn_or_raise(f"Type mismatch: pattern of type `{type(pattern)}`, value of type `{type(value)}`")
 
-    found = bool(re.search(pattern, value, **kwargs))
-
-    return found
+    return bool(re.search(pattern, value, **kwargs))
 
 
 @selector
@@ -115,9 +110,10 @@ def gt(limit: typing.Union[str, int, float, datetime], **kwargs):
     """Compare whether given value is greater than given limit."""
     expected_types = [str, int, float, datetime]
 
-    if config.TYPE_CHECK_LEVEL > 0:
-        if not any([isinstance(limit, t) for t in expected_types]):
-            _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
+    if config.TYPE_CHECK_LEVEL > 0 and not any(
+        isinstance(limit, t) for t in expected_types
+    ):
+        _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
 
     value = kwargs.pop('value')
 
@@ -129,9 +125,10 @@ def ge(limit: typing.Union[str, int, float, datetime], **kwargs):
     """Compare whether given value is greater or equal than given limit."""
     expected_types = [str, int, float, datetime]
 
-    if config.TYPE_CHECK_LEVEL > 0:
-        if not any([isinstance(limit, t) for t in expected_types]):
-            _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
+    if config.TYPE_CHECK_LEVEL > 0 and not any(
+        isinstance(limit, t) for t in expected_types
+    ):
+        _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
 
     value = kwargs.pop('value')
 
@@ -143,9 +140,10 @@ def lt(limit: typing.Union[str, int, float, datetime], **kwargs):
     """Compare whether given value is lower than given limit."""
     expected_types = [str, int, float, datetime]
 
-    if config.TYPE_CHECK_LEVEL > 0:
-        if not any([isinstance(limit, t) for t in expected_types]):
-            _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
+    if config.TYPE_CHECK_LEVEL > 0 and not any(
+        isinstance(limit, t) for t in expected_types
+    ):
+        _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
 
     value = kwargs.pop('value')
 
@@ -157,9 +155,10 @@ def le(limit: typing.Union[str, int, float, datetime], **kwargs):
     """Compare whether given value is lower or equal than given limit."""
     expected_types = [str, int, float, datetime]
 
-    if config.TYPE_CHECK_LEVEL > 0:
-        if not any([isinstance(limit, t) for t in expected_types]):
-            _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
+    if config.TYPE_CHECK_LEVEL > 0 and not any(
+        isinstance(limit, t) for t in expected_types
+    ):
+        _warn_or_raise(f"`limit` expected to be any of {expected_types}, got: `{type(limit)}`")
 
     value = kwargs.pop('value')
 
@@ -169,9 +168,12 @@ def le(limit: typing.Union[str, int, float, datetime], **kwargs):
 @selector
 def in_(array: typing.Union[list, set], **kwargs):
     """Return whether element is present in the array."""
-    if config.TYPE_CHECK_LEVEL > 0:
-        if not isinstance(array, list) and not isinstance(array, set):
-            _warn_or_raise(f"`array` expected to be list or set, got `{type(array)}`")
+    if (
+        config.TYPE_CHECK_LEVEL > 0
+        and not isinstance(array, list)
+        and not isinstance(array, set)
+    ):
+        _warn_or_raise(f"`array` expected to be list or set, got `{type(array)}`")
 
     value = kwargs.pop('value')
 
@@ -189,10 +191,10 @@ def in_range(low: typing.Union[str, int, float, datetime],
     expected_types = [str, int, float, datetime]
 
     if config.TYPE_CHECK_LEVEL > 0:
-        if not any([isinstance(low, t) for t in expected_types]):
+        if not any(isinstance(low, t) for t in expected_types):
             _warn_or_raise(f"`low` expected to be any of {expected_types}, got: `{type(low)}`")
 
-        if not any([isinstance(high, t) for t in expected_types]):
+        if not any(isinstance(high, t) for t in expected_types):
             _warn_or_raise(f"`high` expected to be any of {expected_types}, got: `{type(high)}`")
 
     if low and high <= low:

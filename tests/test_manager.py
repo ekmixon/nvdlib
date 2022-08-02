@@ -161,7 +161,7 @@ class TestJSONFeedMetadata(unittest.TestCase):
         results = asyncio.gather(*futures)
         results = _EVENT_LOOP.run_until_complete(results)
 
-        self.assertTrue(all([r is True for r in results]))
+        self.assertTrue(all(r is True for r in results))
 
         # non-existing
         feeds = ['nope', 'non-existing', 0, 1E+5]
@@ -173,7 +173,7 @@ class TestJSONFeedMetadata(unittest.TestCase):
         results = asyncio.gather(*futures)
         results = _EVENT_LOOP.run_until_complete(results)
 
-        self.assertTrue(all([r is False for r in results]))
+        self.assertTrue(all(r is False for r in results))
 
     def test_metadata_exist(self):
         """Test TestJSONFeedMetadata `metadata_exist` method."""
@@ -189,7 +189,7 @@ class TestJSONFeedMetadata(unittest.TestCase):
         results = asyncio.gather(*futures)
         results = _EVENT_LOOP.run_until_complete(results)
 
-        self.assertTrue(all([r is True for r in results]))
+        self.assertTrue(all(r is True for r in results))
 
         # non-existing
         feeds = ['nope', 'non-existing', 0, 1E+5]
@@ -201,7 +201,7 @@ class TestJSONFeedMetadata(unittest.TestCase):
         results = asyncio.gather(*futures)
         results = _EVENT_LOOP.run_until_complete(results)
 
-        self.assertTrue(all([r is False for r in results]))
+        self.assertTrue(all(r is False for r in results))
 
 
 class TestFeed(unittest.TestCase):

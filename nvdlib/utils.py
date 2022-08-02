@@ -20,7 +20,7 @@ def dictionarize(obj) -> dict:
     array_types = [list, set, tuple]
 
     def _dictionarize(out_dict: dict, **kwargs) -> dict:
-        dct = out_dict or dict()
+        dct = out_dict or {}
 
         for key, value in kwargs.items():
             # replace dashes by underscores JIC
@@ -29,7 +29,7 @@ def dictionarize(obj) -> dict:
                 dct[key] = _dictionarize({}, **value._asdict())
             elif isinstance(value, typing.Mapping):
                 dct[key] = _dictionarize({}, **value)
-            elif any([isinstance(value, array) for array in array_types]):
+            elif any(isinstance(value, array) for array in array_types):
                 dct[key] = dictionarize(value)
             else:
                 dct[key] = value
@@ -40,7 +40,7 @@ def dictionarize(obj) -> dict:
         _call = lambda: _dictionarize({}, **obj._asdict())
     elif isinstance(obj, typing.Mapping):
         _call = lambda: _dictionarize({}, **obj)
-    elif any([isinstance(obj, array) for array in array_types]):
+    elif any(isinstance(obj, array) for array in array_types):
         _call = lambda: [
             dictionarize(item) for item in obj
         ]
@@ -72,8 +72,7 @@ class AttrDict(Mapping):  # noqa: D205,D400
                 self.__dict__[key] = value
 
     def __iter__(self):
-        for k in self.__dict__:
-            yield k
+        yield from self.__dict__
 
     def __len__(self):
         return len(self.__dict__)
@@ -110,15 +109,10 @@ def get_victims_notation(version_tuple: typing.Sequence) -> list:
                              " Expected shapes (5,) == (5,), got: %r != %r" % (len(version_tuple), len(SYMBOLS)))
 
     if not any(version_tuple):
-        victims_notation = None  # undefined
+        return None
 
-    else:
-        indices = [i for i, val in enumerate(version_tuple) if val is not None]
-        victims_notation = [
-            str(SYMBOLS[i]) + str(version_tuple[i]) for i in indices
-        ]
-
-    return victims_notation
+    indices = [i for i, val in enumerate(version_tuple) if val is not None]
+    return [str(SYMBOLS[i]) + str(version_tuple[i]) for i in indices]
 
 
 def compute_sha256(fpath):
@@ -126,10 +120,10 @@ def compute_sha256(fpath):
     sha256 = hashlib.sha256()
     with open(fpath, 'rb') as f:
         while True:
-            data = f.read(4096)
-            if not data:
+            if data := f.read(4096):
+                sha256.update(data)
+            else:
                 break
-            sha256.update(data)
     return sha256.hexdigest().lower()
 
 
@@ -140,11 +134,7 @@ def rhasattr(obj, attr: str) -> bool:
     """
     # check for and array
     if isinstance(obj, list):
-        if not obj:  # empty list
-            return False
-
-        return any(rhasattr(item, attr) for item in obj)
-
+        return any(rhasattr(item, attr) for item in obj) if obj else False
     try:
         left, right = attr.split('.', 1)
 
@@ -163,13 +153,14 @@ def rgetattr(obj,
     The attribute can be nested, i.e.: 'foo.bar.baz'
     """
     if isinstance(obj, list):
-        if not obj:  # empty list
-            return None
-
-        return [
-            rgetattr(item, attr, repl_missing, raise_if_missing)
-            for item in obj
-        ]
+        return (
+            [
+                rgetattr(item, attr, repl_missing, raise_if_missing)
+                for item in obj
+            ]
+            if obj
+            else None
+        )
 
     try:
         left, right = attr.split('.', 1)

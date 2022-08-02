@@ -177,11 +177,7 @@ class DescriptionEntry(Entry):
             )
 
     def __init__(self, data: dict = None):
-        description_data = list()
-
-        if data is not None:
-            description_data = data['description_data']
-
+        description_data = data['description_data'] if data is not None else []
         super(DescriptionEntry, self).__init__(*description_data)
 
     def parse(self, entry: typing.Any):
@@ -205,11 +201,7 @@ class ReferenceEntry(Entry):
             )
 
     def __init__(self, data: dict = None):
-        reference_data = list()
-
-        if data is not None:
-            reference_data = data['reference_data']
-
+        reference_data = data['reference_data'] if data is not None else []
         super(ReferenceEntry, self).__init__(*reference_data)
 
     def parse(self, entry: typing.Any):
@@ -237,7 +229,7 @@ class AffectsEntry(Entry):
             )
 
     def __init__(self, data: dict = None):
-        affects_data = list()
+        affects_data = []
 
         if data is not None:
             vendor_data = data['vendor']['vendor_data']
@@ -347,14 +339,13 @@ class Configurations(namedtuple('Configurations', [
 
     @classmethod
     def from_data(cls, data):
-        if not data:
-            return cls(**{})
-
-        return cls(
-            cve_data_version=data['CVE_data_version'],
-            nodes=[
-                ConfigurationsEntry(node) for node in data['nodes']
-            ]
+        return (
+            cls(
+                cve_data_version=data['CVE_data_version'],
+                nodes=[ConfigurationsEntry(node) for node in data['nodes']],
+            )
+            if data
+            else cls(**{})
         )
 
     def pretty(self):
@@ -584,18 +575,14 @@ class Document(namedtuple('Document', [
         keys = p_dict.keys()
 
         # create projection tree
-        if not p_dict.pop('id_', 1):
-            projection = dict()
-        else:
-            projection = {'id_': self.id_}
-
+        projection = {'id_': self.id_} if p_dict.pop('id_', 1) else {}
         for key in keys:
 
             ptr_dict = projection
 
             sub_keys = key.split(sep='.')
             for sub_key in sub_keys[:-1]:
-                ptr_dict[sub_key] = dict()
+                ptr_dict[sub_key] = {}
                 ptr_dict = ptr_dict[sub_key]
 
             ptr_dict[sub_keys[-1]] = utils.rgetattr(self, key, **kwargs)

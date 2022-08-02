@@ -100,7 +100,7 @@ class DefaultAdapter(BaseAdapter):
 
         self._meta_fpath = None
         self._meta_fd = None
-        self._shards = list()  # set of file descriptors
+        self._shards = []
 
         self._schema: dict = None
 
@@ -199,9 +199,8 @@ class DefaultAdapter(BaseAdapter):
         if any(self._data):  # for consistency, dump all the data into shards
             self.dump_shard()
 
-        if limit is not None:
-            if limit <= 0 or not isinstance(limit, int):
-                raise ValueError(f"`limit` must be integer greater than 0, got: {limit}")
+        if limit is not None and (limit <= 0 or not isinstance(limit, int)):
+            raise ValueError(f"`limit` must be integer greater than 0, got: {limit}")
 
         # release locks and close descriptors (pass ownership to threads)
         # release_lock(*self._shards, self._meta_fd)
@@ -226,10 +225,11 @@ class DefaultAdapter(BaseAdapter):
         for entry in data:
             discard = False
             for attr, pattern in selectors.items():
-                if not isinstance(pattern, typing.Callable):
-                    select: typing.Callable = query_selectors.match(pattern)
-                else:
-                    select: typing.Callable = pattern
+                select: typing.Callable = (
+                    pattern
+                    if isinstance(pattern, typing.Callable)
+                    else query_selectors.match(pattern)
+                )
 
                 if not select(entry, attr):
                     discard = True
@@ -296,18 +296,11 @@ class DefaultAdapter(BaseAdapter):
 
     def cursor(self):
         """Initialize cursor to the beginning of a collection."""
-        if self._shards:
-            cursor = Cursor(
-                shards=self._shards
-            )
-        else:
-            cursor = Cursor(
-                data=[
-                    item for item in self._data if item is not None
-                ]
-            )
-
-        return cursor
+        return (
+            Cursor(shards=self._shards)
+            if self._shards
+            else Cursor(data=[item for item in self._data if item is not None])
+        )
 
     def sample(self, sample_size: int = 20, entire=False):
         """Draw random sample.
@@ -319,15 +312,12 @@ class DefaultAdapter(BaseAdapter):
         it is recommended to use `entire=True`, otherwise due to its significant performance
         overhead, default value (False) is recommended.
         """
-        sample_size = int(sample_size)
+        sample_size = sample_size
 
         if sample_size <= 0:
             raise ValueError("`sample_size` must be >= 0")
 
-        buffer_size = 0
-        for item in self._data:
-            buffer_size += int(item is not None)
-
+        buffer_size = sum(int(item is not None) for item in self._data)
         if buffer_size >= sample_size and not entire:
             # use default method in case enough data are present in the buffer
             sample = super(DefaultAdapter, self).sample(sample_size=sample_size)
@@ -335,9 +325,7 @@ class DefaultAdapter(BaseAdapter):
         else:  # use all shards in order to get more accurate distribution
 
             # check if there is enough data
-            total_data = sum([
-                shard['size'] for shard in self._shard_meta.values()
-            ])
+            total_data = sum(shard['size'] for shard in self._shard_meta.values())
 
             if total_data < sample_size:
                 raise ValueError("`sample_size` can not be greater than the total amount of data.")

@@ -77,19 +77,21 @@ class Collection(object):
 
     def __repr__(self):
         """Return unique representation of collection."""
-        collection_repr = textwrap.dedent("""
+        return textwrap.dedent(
+            """
         Collection: {{
            _id: {_id}
            name: '{name}'
            adapter: '{adapter}',
            documents: {count}
         }}
-        """).format(_id=id(self),
-                    name=self.name,
-                    adapter=self._adapter.name,
-                    count=self._count)
-
-        return collection_repr
+        """
+        ).format(
+            _id=id(self),
+            name=self.name,
+            adapter=self._adapter.name,
+            count=self._count,
+        )
 
     @property
     def storage(self):
@@ -104,15 +106,11 @@ class Collection(object):
              selector: typing.Dict[str, typing.Any] = None,
              limit: int = None) -> "Collection":
         """Find documents based on given selector."""
-        if not selector:
-            return self
-
-        collection: Collection = Collection(self._adapter.find(
-            selectors=selector,
-            limit=limit
-        ))
-
-        return collection
+        return (
+            Collection(self._adapter.find(selectors=selector, limit=limit))
+            if selector
+            else self
+        )
 
     def cursor(self):
         """Initialize cursor to the beginning of a collection."""
@@ -138,9 +136,7 @@ class Collection(object):
         """Pretty print sample of documents."""
         collection_size = self._adapter.count()
 
-        if sample_size > collection_size:
-            sample_size = collection_size
-
+        sample_size = min(sample_size, collection_size)
         for doc in self._adapter.sample(sample_size):
             doc.pretty()
             print()  # newline

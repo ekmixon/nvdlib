@@ -81,8 +81,8 @@ class TestUtils(unittest.TestCase):
     def test_get_victims_notation(self):
         """Test `utils.get_victims_notation` function."""
         victims_pattern = r"^(?P<condition>[><=]=)" \
-                          r"(?P<version>[^, ]+)" \
-                          r"(?:,(?P<series>[^, ]+)){0,1}$"
+                              r"(?P<version>[^, ]+)" \
+                              r"(?:,(?P<series>[^, ]+)){0,1}$"
 
         # versions in tuple format:
         #   (versionExact, versionEndExcluding, versionEndIncluding,
@@ -99,8 +99,9 @@ class TestUtils(unittest.TestCase):
         victims_notation = utils.get_victims_notation(version_tuple)
 
         self.assertTrue(
-            all([re.fullmatch(victims_pattern, vn) for vn in victims_notation])
+            all(re.fullmatch(victims_pattern, vn) for vn in victims_notation)
         )
+
         self.assertEqual(victims_notation, ["==1.0"])
 
         # including-excluding
@@ -128,8 +129,9 @@ class TestUtils(unittest.TestCase):
         victims_notation = utils.get_victims_notation(version_tuple)
 
         self.assertTrue(
-            all([re.fullmatch(victims_pattern, vn) for vn in victims_notation])
+            all(re.fullmatch(victims_pattern, vn) for vn in victims_notation)
         )
+
         self.assertEqual(victims_notation, ['<=2.0', '>=1.0'])
 
     def test_dictionarize(self):

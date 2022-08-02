@@ -58,9 +58,7 @@ class TestDefaultAdapter(unittest.TestCase):
         self.assertIn('.meta', os.listdir(tmp_storage))
 
         # dump has been not created
-        self.assertFalse(any([
-            not f.startswith('.') for f in os.listdir(tmp_storage)
-        ]))
+        self.assertFalse(any(not f.startswith('.') for f in os.listdir(tmp_storage)))
 
         # ---
         # dump shard
@@ -199,7 +197,7 @@ class TestDefaultAdapter(unittest.TestCase):
         # bigger sample size
         sample = adapter.sample(sample_size=5)
         self.assertEqual(len(sample), 5)
-        self.assertTrue(all([isinstance(s, Document) for s in sample]))
+        self.assertTrue(all(isinstance(s, Document) for s in sample))
 
         # ---
         # too big
